@@ -1,94 +1,72 @@
-/*----------------------------------------------------------------------------*/
-/* Copyright (c) FIRST 2008. All Rights Reserved.                             */
-/* Open Source Software - may be modified and shared by FRC teams. The code   */
-/* must be accompanied by the FIRST BSD license file in the root directory of */
-/* the project.                                                               */
-/*----------------------------------------------------------------------------*/
 
 package edu.wpi.first.wpilibj.robot;
 
 
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.IterativeRobot;
-import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.Relay;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.Victor;
-import edu.wpi.first.wpilibj.buttons.JoystickButton;
-
+import edu.wpi.first.wpilibj.camera.AxisCamera;
+import edu.wpi.first.wpilibj.command.Command;
+import edu.wpi.first.wpilibj.commands.Solenoids;
+import edu.wpi.first.wpilibj.commands.TankDrive;
+import edu.wpi.first.wpilibj.commands.runTurrett;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.subsystems.DriveTrain;
+import edu.wpi.first.wpilibj.subsystems.Pneumatics;
+import edu.wpi.first.wpilibj.subsystems.Turrett;
 
 public class Robot extends IterativeRobot {
-    //Operator Interface
-    public Joystick leftDrive = new Joystick(1); //left-hand joystick
-    public Joystick rightDrive = new Joystick(2); //right-hand joystick
-    public Joystick turretDrive = new Joystick(3);
-    public JoystickButton fireOne = new JoystickButton(turretDrive, 2);
-    public JoystickButton fireTwo = new JoystickButton(turretDrive, 3);
-    public JoystickButton fireThree = new JoystickButton(turretDrive, 4);
-    public JoystickButton fireFour = new JoystickButton(turretDrive, 5);
-    public JoystickButton Safety = new JoystickButton(turretDrive, 1);
     
-    //Compressors
-    DigitalInput pressure = new DigitalInput(1); //Pressure Switch object
-    Relay compressors = new Relay(1); //Relay that controls both compressors
+    //Create Objects
+    public static DriveTrain driveTrain; //Create the DriveTrain subsystem object
+    public static OI OI; //Create the OperatorInterface object
+    public static Solenoids solenoids; //Create the Solenoids command object
+    public static Pneumatics pneumatics; //Create the pneumatics subsystem object
+    public static Turrett turrett; //Create Turrett subsystem
+    public static runTurrett shoot; //Create runTurrett command object
     
-    //DriveTrain
-    Victor leftMotor = new Victor(1); //leftDrive
-    Victor rightMotor = new Victor(2); //rightDrive
     
-    //turret subsystem
-    public Victor elevation = new Victor(3); //motor that raises the turret
-    public Victor turn = new Victor(4); //motor that lowers the turret
-    public DigitalInput upperLinit = new DigitalInput(2); //elevator upper limit switch
-    public DigitalInput lowerLimit = new DigitalInput(3); //elevator lower limit switch
-    public DigitalInput leftLimit = new DigitalInput(4); //turret turn axis left limit switch
-    public DigitalInput rightLimit = new DigitalInput(5); //turret turn axis right limit switch
-    
-    //Solenoid Subsystem
-    public Relay soleOne = new Relay(2);
-    public Relay soleTwo = new Relay(3);
-    public Relay soleThree = new Relay(4);
-    public Relay soleFour = new Relay(5);
-    
+    //Runs once on robot start
     public void robotInit() {
-
+        //Instantiate Objects
+        driveTrain = new DriveTrain(); //Instantiate DriveTrain
+        OI = new OI(); //Instantiate the Operator Interface
+        solenoids = new Solenoids(); //Instantiate Solenoids command
+        pneumatics = new Pneumatics(); //Instantiate Pneumatics subsystem
+        turrett = new Turrett(); //Instantiate turrett command
+        shoot = new runTurrett(); //Instantiate runTurrett command
     }
-
-
+    //runs continuously during autonomous
     public void autonomousPeriodic() {
 
     }
 
+    //runs continuously during teleop
     public void teleopPeriodic() {
-        double delay = 0.15; //timer delay
-        //Drive code
-        leftMotor.set(leftDrive.getY()); //set the left motor to the leftSpeed
-        rightMotor.set(rightDrive.getY()); //set the right motor to the rightSpeed
-        
-        if (Safety.get() && fireOne.get()) {
-            soleOne.set(Relay.Value.kOn);
-            Timer.delay(delay);
+        pneumatics.compressorStop(); //if not enabled, then don't run the compressors
+        while (isEnabled() && isOperatorControl()) { //while the robot is enabled
+            TankDrive.drive(); //Drive the robot 
+            runTurrett.run(); //run the runTurrett command
+            Pneumatics.compressorStart(); //Start the compressor 
+            while (OI.safety.get() == true) { //while the safety button is pressed
+                solenoids.solenoidFire(); //Fire the solenoids based on the Solenoids() command
+            }
+            if (Pneumatics.isRunning == false) { //if no solenoids are set to be fired
+                Pneumatics.soleTimer.stop(); //stop the timer
+                Pneumatics.soleTimer.reset(); //reset the timer
+            }
         }
-        else if (Safety.get() && fireTwo.get()) {
-            soleTwo.set(Relay.Value.kOn);
-            Timer.delay(delay);
-        }
-        else if (Safety.get() && fireThree.get()) {
-            soleThree.set(Relay.Value.kOn);
-            Timer.delay(delay);
-        }
-        else if (Safety.get() && fireFour.get()) {
-            soleFour.set(Relay.Value.kOn);
-            Timer.delay(delay);
+        SmartDashboard.putBoolean("T-Shirt One fired: ", pneumatics.oneFired);
+        SmartDashboard.putBoolean("T-Shirt Two fired: ", pneumatics.twoFired);
+        SmartDashboard.putBoolean("T-Shirt Three fired: ", pneumatics.threeFired);
+        SmartDashboard.putBoolean("T-Shirt Four fired: ", pneumatics.fourFired);
+
+        if (pneumatics.oneFired && pneumatics.twoFired && pneumatics.threeFired && pneumatics.fourFired) {
+            SmartDashboard.putString("All shirts have been fired. Reload the robot.", "");
         }
         else {
-            soleOne.set(Relay.Value.kOff);
-            soleTwo.set(Relay.Value.kOff);
-            soleThree.set(Relay.Value.kOff);
-            soleFour.set(Relay.Value.kOff);
+            SmartDashboard.putString("You can keep going!!", "");
         }
     }
-    
+    //runs continuously during 'test' mode. DO NOT USE!!!
     public void testPeriodic() {
     
     }

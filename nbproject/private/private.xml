@@ -3,8 +3,14 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/zachl/Documents/NetBeansProjects/TCannon/build.xml</file>
-            <file>file:/C:/Users/zachl/Documents/NetBeansProjects/TCannon/src/edu/wpi/first/wpilibj/templates/RobotTemplate.java</file>
+            <file>file:/C:/Users/zachl/Documents/NetBeansProjects/T-Shirt%20Cannon/src/edu/wpi/first/wpilibj/robot/Robot.java</file>
+            <file>file:/C:/Users/zachl/Documents/NetBeansProjects/T-Shirt%20Cannon/src/edu/wpi/first/wpilibj/robot/RobotMap.java</file>
+            <file>file:/C:/Users/zachl/Documents/NetBeansProjects/T-Shirt%20Cannon/src/edu/wpi/first/wpilibj/robot/OI.java</file>
+            <file>file:/C:/Users/zachl/Documents/NetBeansProjects/T-Shirt%20Cannon/src/edu/wpi/first/wpilibj/commands/Solenoids.java</file>
+            <file>file:/C:/Users/zachl/Documents/NetBeansProjects/T-Shirt%20Cannon/src/edu/wpi/first/wpilibj/subsystems/DriveTrain.java</file>
+            <file>file:/C:/Users/zachl/Documents/NetBeansProjects/T-Shirt%20Cannon/src/edu/wpi/first/wpilibj/commands/ArcadeDrive.java</file>
+            <file>file:/C:/Users/zachl/Documents/NetBeansProjects/T-Shirt%20Cannon/src/edu/wpi/first/wpilibj/subsystems/Pneumatics.java</file>
+            <file>file:/C:/Users/zachl/Documents/NetBeansProjects/T-Shirt%20Cannon/src/edu/wpi/first/wpilibj/commands/TankDrive.java</file>
         </group>
     </open-files>
 </project-private>
