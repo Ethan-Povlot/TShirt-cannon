@@ -1,0 +1,31 @@
+from tensorflow.keras.layers import Bidirectional
+
+def create_model(
+        units=50, dense_units=50, dropout_rate=0.0, learning_rate=0.001,
+        num_layers=1, num_dense_layers=1, use_gru=False, use_bidirectional=False):
+    
+    model = Sequential()
+    
+    # Add LSTM or GRU layers
+    for _ in range(num_layers):
+        if use_bidirectional:
+            if use_gru:
+                model.add(Bidirectional(GRU(units, activation='relu', return_sequences=True if _ < num_layers - 1 else False, input_shape=(lookback, X_features_scaled.shape[1]))))
+            else:
+                model.add(Bidirectional(LSTM(units, activation='relu', return_sequences=True if _ < num_layers - 1 else False, input_shape=(lookback, X_features_scaled.shape[1]))))
+        else:
+            if use_gru:
+                model.add(GRU(units, activation='relu', return_sequences=True if _ < num_layers - 1 else False, input_shape=(lookback, X_features_scaled.shape[1])))
+            else:
+                model.add(LSTM(units, activation='relu', return_sequences=True if _ < num_layers - 1 else False, input_shape=(lookback, X_features_scaled.shape[1])))
+        model.add(Dropout(dropout_rate))
+    
+    # Add Dense layers
+    for _ in range(num_dense_layers):
+        model.add(Dense(dense_units, activation='relu'))
+        model.add(Dropout(dropout_rate))
+    
+    model.add(Dense(1))
+    optimizer = Adam(learning_rate=learning_rate)
+    model.compile(optimizer=optimizer, loss='mean_squared_error')
+    return model
