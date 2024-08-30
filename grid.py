@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, GRU, Dense, Dropout
-from scikeras.wrappers import KerasClassifier
+from keras.wrappers.scikit_learn import KerasRegressor
 from sklearn.model_selection import GridSearchCV
 
 # Reshape the data to include the look-back window dimension
@@ -50,7 +50,7 @@ def build_model(units=50, dense_nodes=10, activation='relu', optimizer='adam',
 X_reshaped, Y_reshaped = reshape_data(X, Y, look_back=1)
 
 # Wrap the model with KerasClassifier
-model = KerasClassifier(
+model = KerasRegressor(
     model=build_model, 
     units=50, 
     dense_nodes=10, 
