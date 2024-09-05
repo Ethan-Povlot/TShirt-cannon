@@ -237,3 +237,96 @@ for i, (X, Y) in enumerate(datasets):
     model_name = f'fine_tuned_model_dataset_{i+1}.keras'
     fine_tuned_model.save(model_name)
     print(f"Saved fine-tuned model for dataset {i+1} as {model_name}')
+
+
+
+
+
+
+
+def simulated_annealing_search(initial_params, X_train, Y_train, X_val, Y_val, max_iterations=10, initial_temperature=1.0, cooling_rate=0.9, tolerance=1e-3):
+    current_params = initial_params.copy()
+    best_params = initial_params.copy()
+    best_score = evaluate_model(best_params, X_train, Y_train, X_val, Y_val)
+    
+    temperature = initial_temperature
+    
+    for iteration in range(max_iterations):
+        improved = False
+        
+        # Scale the step sizes based on the current temperature
+        param_steps = {
+            'lstm_units_list': [int(temperature * 10), int(-temperature * 10)],  # Change by 10 units
+            'gru_units_list': [int(temperature * 10), int(-temperature * 10)],   # Change by 10 units
+            'dense_node_list': [int(temperature * 5), int(-temperature * 5)],    # Change by 5 units
+            'dropout_rate': [temperature * 0.05, -temperature * 0.05],           # Change dropout rate by 0.05
+            'look_back': [int(temperature * 1), int(-temperature * 1)],          # Change look_back window by 1
+            'batch_size': [int(temperature * 16), int(-temperature * 16)],       # Change batch size
+            'epochs': [int(temperature * 10), int(-temperature * 10)]            # Change number of epochs
+        }
+        
+        activation_options = ['relu', 'tanh', 'sigmoid']
+        optimizer_options = ['adam', 'rmsprop', 'sgd']
+        
+        # Try different activation functions
+        for activation in activation_options:
+            if activation != current_params['activation']:
+                new_params = current_params.copy()
+                new_params['activation'] = activation
+                score = evaluate_model(new_params, X_train, Y_train, X_val, Y_val)
+                if score < best_score - tolerance:
+                    best_score = score
+                    best_params = new_params
+                    improved = True
+                    print(f"Iteration {iteration + 1}: Changed activation to {activation} with score {best_score}")
+        
+        # Try different optimizers
+        for optimizer in optimizer_options:
+            if optimizer != current_params['optimizer']:
+                new_params = current_params.copy()
+                new_params['optimizer'] = optimizer
+                score = evaluate_model(new_params, X_train, Y_train, X_val, Y_val)
+                if score < best_score - tolerance:
+                    best_score = score
+                    best_params = new_params
+                    improved = True
+                    print(f"Iteration {iteration + 1}: Changed optimizer to {optimizer} with score {best_score}")
+        
+        # Try variations in numerical parameters
+        for key in param_steps:
+            current_value = current_params[key]
+            if isinstance(current_value, list):  # Handle lists like lstm_units_list, gru_units_list, etc.
+                for i in range(len(current_value)):
+                    for step in param_steps[key]:
+                        new_value = current_value[i] + step
+                        if new_value > 0:  # Ensure the parameters remain positive and valid
+                            new_params = current_params.copy()
+                            new_params[key][i] = new_value
+                            score = evaluate_model(new_params, X_train, Y_train, X_val, Y_val)
+                            if score < best_score - tolerance:  # Improvement found
+                                best_score = score
+                                best_params = new_params
+                                improved = True
+                                print(f"Iteration {iteration + 1}: Improved {key} to {new_value} with score {best_score}")
+            else:  # Handle scalar parameters like dropout_rate, batch_size, etc.
+                for step in param_steps[key]:
+                    new_value = current_value + step
+                    if new_value > 0:  # Ensure the parameters remain positive and valid
+                        new_params = current_params.copy()
+                        new_params[key] = new_value
+                        score = evaluate_model(new_params, X_train, Y_train, X_val, Y_val)
+                        if score < best_score - tolerance:  # Improvement found
+                            best_score = score
+                            best_params = new_params
+                            improved = True
+                            print(f"Iteration {iteration + 1}: Improved {key} to {new_value} with score {best_score}")
+        
+        if not improved:  # Stop if no improvement found
+            print(f"No further improvements after {iteration + 1} iterations.")
+            break
+        
+        # Reduce the temperature
+        temperature *= cooling_rate
+    
+    return best_params, best_score
+
